@@ -1,4 +1,5 @@
-import spotify
+#import spotify
+import Bose_Functions
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse, Message
 from twilio.rest import Client
@@ -8,18 +9,18 @@ import xmltodict
 import json
 import pandas as pd
 try:
-    import Queue as Q  # ver. < 3.0
+	import Queue as Q  # ver. < 3.0
 except ImportError:
-    import queue as Q
-	
-q = Q.PriorityQueue()
+	import queue as Q
+q1 = Q.PriorityQueue()
 q2 = Q.PriorityQueue()
 client = Client('AC22b947e22fa835ea721401cf4016817b', '0cfdae9c98181b341cddfd21b6541e3e')
 sid = '35bc763fa7264c44b3db49feaf8d5a9e'
 ssecret = '69ca704b0a824ce68043d1f04173eba2'
-app = Flask(__name__)
 soath = 'BQAgfYft_OcY400oz3HZdY1-gCpyb853gOYTGtqMERr7VRrWQBX_bWYLZBuae6r6TRdUF7Vr_6d5NI0INBU8YQpvSqYi65qzOTQoTxGTAPsSVxfKiVgDI3k-wCkPF7Wz7_-X4T3ZQQQEvAx9bAoFA-43Q2q7D5W4kZLi2lY-q_PlJyeSxKjr1fY52U0gPMUjaqz_NHpRC9kwB_uuR8AgxR-cfdrsaiJYfu9uguUV6ESOSMGavd9iXujRjPTMr86lkVytYsTQHhif'
+	
 
+app = Flask(__name__)
  
 def playSong(uri,name):
 	print("Playing song")
@@ -62,17 +63,26 @@ def playSong(uri,name):
  
 #adds song to priority queue
 def enqueueSong(uri, entername):
-	while not q.empty():
-		song = q.get()
-		print(type(song))
+	global q1
+	global q2
+	if q1.empty():
+		q1.put(((-1, entername, uri)))
+		print('Added song' + entername + uri)
+		return()
+	while not q1.empty():
+		song = q1.get()
+		print("song q is ",song)
 		priority = song[0]
-		name = song[1]
+		priority -= 1
+		ename = song[1]
 		uri = song[2]
-		if entername == name:
-			q2.put((priority-1, name, uri))
+		if entername == ename:
+			q2.put((priority, ename, uri))
 		else:
-			q2.put((priority, name, uri))	
-	q = q2;
+			q2.put((priority+1, ename, uri))
+	q1 = q2
+	q1.put(((-1, entername, uri)))
+	print("Not empty, added song" + entername)
 	q2 = Q.PriorityQueue()
 #play song
 def playNext(uri, name):
@@ -81,8 +91,10 @@ def playNext(uri, name):
 # A route to respond to SMS messages and play music
 @app.route('/sms', methods=['POST'])
 def inbound_sms():
-	#response = MessagingResponse()
-	
+	response = MessagingResponse()
+	response.message('Hi')
+	print("Q is:")
+	print(q1)
 	# Grab the song title from the body of the text message.
 	song_title = urllib.parse.quote(request.form['Body'])
 	
@@ -103,9 +115,10 @@ def inbound_sms():
 	track = (r.json()['tracks']['items'][0]['name'])
 	name = track
 	message = client.messages.create(from_number,body="Your song has been queued!",from_=to_number)
-	
+	print("Read song: " + name)
 	enqueueSong(uri, name)
-	#return str(response)
+	return str(response)
 	
-if __name__ == '__main__':
+if __name__ == '__main__':		
+	print(q1)
 	app.run(host='0.0.0.0', debug=True)

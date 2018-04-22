@@ -2,36 +2,7 @@ import requests
 import xmltodict
 import json
 import pandas as pd
-
 import re
-def playSong(uri):
-	URL_Select="http://192.168.1.144:8090/select"
-	URL_Sources="http://192.168.1.144:8090/sources"
-	#PARAMS = {'address':location}
-
-	#r = requests.post(url = URL, data = "<ContentItem source="AUX" sourceAccount="AUX"></ContentItem>")
-
-	r = requests.get(url = URL_Sources, params=None)
-	if r is not None:
-		print("read: ",r)
-		data=xmltodict.parse(r.text)
-		#J=json.dumps(data)
-		#k=pd.read_json(J)
-		#l=pd.read_json(k['sourceItem
-		#print(k["sourceItem"]["sources"])
-		#print("data:",k["sourceItem"])
-		
-		for key, value in data["sources"].items():
-			#print("key: ",key, "Value: ", value)
-			#print("type:",type(value))
-			if(type(value) is list):
-				spotify=value[-1]#json.dumps((value[-1]))
-		#print("spotify is ",spotify)
-		#print("type is ",type(spotify))
-		acc_num=list(spotify.items())[1][1]
-		print("Account Number is: ",acc_num)
-		r = requests.post(url = URL_Select, data='<ContentItem source="SPOTIFY" type="uri" location='+uri+' sourceAccount='+acc_num+' isPresetable="true"><itemName>The Hollow</itemName></ContentItem>')
-
 	   
 def isDone():
 	URL_NP="http://192.168.1.144:8090/now_playing"
@@ -76,10 +47,8 @@ def volumeDown(step=5):
 		r = requests.post(url = URL_Vol, data='<volume>'+str(vol)+'</volume>')
 def volumeMax():
 	URL_Vol="http://192.168.1.144:8090/volume"
-	r = requests.post(url = URL_Vol, data='<volume>'+str(100)+'</volume>')
+	r = requests.post(url = URL_Vol, data='<volume>'+str(65)+'</volume>')
 def mute():
 	URL_Vol="http://192.168.1.144:8090/volume"
 	r = requests.post(url = URL_Vol, data='<volume>'+str(0)+'</volume>')
 
-print(isDone())
-mute()
