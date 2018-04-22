@@ -68,6 +68,7 @@ def enqueueSong(uri, entername):
 	if q1.empty():
 		q1.put(((-1, entername, uri)))
 		print('Added song' + entername + uri)
+		playSong(uri, name)
 		return()
 	while not q1.empty():
 		song = q1.get()
