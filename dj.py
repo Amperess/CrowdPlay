@@ -26,10 +26,12 @@ app = Flask(__name__)
 
 def skip():
 	global q1
-	song = q1.get()
-	print("song struct is: ",song)
-	playSong(song[2], song[1])
-
+	if not q1.empty():
+		song = q1.get()
+		print("song struct is: ",song)
+		playSong(song[2], song[1])
+	else:
+		print("No songs left in queue")
 
 
 #volume Control
@@ -136,7 +138,6 @@ def transitionTracks():
 @app.route('/sms', methods=['POST'])
 def inbound_sms():
 	response = MessagingResponse()
-	response.message('Hi')
 	print("Q is:")
 	print(q1)
 	# Grab the song title from the body of the text message.
@@ -148,9 +149,10 @@ def inbound_sms():
 	
 	if (song_title.lower().startswith('volume')):
 		volume(song_title)
+		response.message('Volume adjusted')
 	elif(song_title.lower().strip()=='skip'):
 		skip()
-		
+		response.message('Attempting to skip!')
 	else:
 		#get auth token
 		url='https://accounts.spotify.com/api/token'
@@ -168,10 +170,10 @@ def inbound_sms():
 			return str(response)
 		track = (r.json()['tracks']['items'][0]['name'])
 		name = track
-		message = client.messages.create(from_number,body="Your song has been queued!",from_=to_number)
 		print("Read song: " + name)
 		print("URI IS: ", uri)
 		enqueueSong(uri, name)
+		response.message(name + ' is being added to the queue!')
 
 	return str(response)
 	
