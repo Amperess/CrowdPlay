@@ -149,9 +149,7 @@ def inbound_sms():
 	if (song_title.lower().startswith('volume')):
 		volume(song_title)
 	elif(song_title.lower().strip()=='skip'):
-		
-		
-		
+		skip()
 		
 	else:
 		#get auth token
