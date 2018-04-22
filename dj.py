@@ -30,8 +30,10 @@ def skip():
 		song = q1.get()
 		print("song struct is: ",song)
 		playSong(song[2], song[1])
+		return('Song skipped')
 	else:
-		print("No songs left in queue")
+		#print("No songs left in queue")
+		return('No songs left in queue')
 
 
 #volume Control
@@ -52,9 +54,80 @@ def volume(song_title):
 		print("step: ",step)
 		if( 'up' in song_title.lower()):
 			bf.volumeUp(step)
+			return('Volume increased by ' + str(step))
 		else:
 			bf.volumeDown(step)
-
+			return('Volume decreased by ' + str(step))
+def mute():
+	bf.mute()
+def volumeMax():
+	bf.volumeMax()
+def nextFive():
+	global q1
+	s = 'Coming up next: '
+	sname=" "
+	sname2=" "
+	sname3=" "
+	sname4=" "
+	sname5=" "
+	spri=-10000
+	spri2=-10000
+	spri3=-10000
+	spri4=-10000
+	spri5=-10000
+	suri=" "
+	suri2=" "
+	suri3=" "
+	suri4=" "
+	suri5=" "
+	#grab them and hold them all to cocatenate, can't add them back in because 
+	#it would put them back at the front and they would just get got again
+	if not q1.empty():
+		song = q1.get()
+		spri = song[0]
+		sname = song[1]
+		suri = song[2]
+		s = s + sname + ', '
+	if not q1.empty():
+		song = q1.get()
+		spri2 = song[0]
+		sname2 = song[1]
+		suri2 = song[2]
+		s = s + sname2 + ', '
+	if not q1.empty():
+		song = q1.get()
+		spri3 = song[0]
+		sname3 = song[1]
+		suri3 = song[2]
+		s = s + sname3 + ', '
+	if not q1.empty():
+		song = q1.get()
+		spri4 = song[0]
+		sname4 = song[1]
+		suri4 = song[2]
+		s = s + sname4 + ', '
+	if not q1.empty():
+		song = q1.get()
+		spri5 = song[0]
+		sname5 = song[1]
+		suri5 = song[2]
+		s = s + sname5
+	
+	#If it actually got taken out and checked aka the atributes werent null, put them back with same values
+	#!!!check if theres an issue with doing this near the end of a song 
+	if not sname is " ":
+		q1.put(((spri, sname, suri)))
+	if not sname2 is " ":
+		q1.put(((spri2, sname2, suri2)))
+	if not sname3 is " ":
+		q1.put(((spri3, sname3, suri3)))
+	if not sname4 is " ":
+		q1.put(((spri4, sname4, suri4)))
+	if not sname5 is " ":
+		q1.put(((spri5, sname5, suri5)))
+	if sname is " " and sname2 is " " and sname3 is " " and sname4 is " " and sname5 is " ":
+		s = "Nothing up next. Add something?"
+	return s
  
 def playSong(uri,name):
 	print("Playing song")
@@ -147,23 +220,35 @@ def inbound_sms():
 	from_number = request.form['From']
 	to_number = request.form['To']
 	
+	print("song title is:", song_title.lower().strip())
+
 	if (song_title.lower().startswith('volume')):
-		volume(song_title)
-		response.message('Volume adjusted')
+		#volume(song_title)
+		response.message(volume(song_title))
 	elif(song_title.lower().strip()=='skip'):
-		skip()
-		response.message('Attempting to skip!')
+		#skip()
+		response.message(skip())
+	elif(song_title.lower().strip()=='mute'):
+		mute()
+		response.message('Volume Off')
+	elif(song_title.lower().strip()=='max%20volume' or song_title.lower().strip()=='volume max'):
+		print("Maximum volume")
+		volumeMax()
+		response.message('It\'s over 9000!')
+	elif(song_title.lower().strip()=='up%20next'):
+		response.message(nextFive())
 	else:
 		#get auth token
 		url='https://accounts.spotify.com/api/token'
 		postr=requests.post(url, data = {'grant_type' : 'client_credentials'}, auth = (sid, ssecret))
 		token = postr.json()
 		token=(token['access_token'])
-		
 		#Get song information
-		surl = 'https://api.spotify.com/v1/search?q='+ song_title + '&type=track&limit=1&offset=0'
+		surl = 'https://api.spotify.com/v1/search?q='+ song_title + '&type=track&limit=5&offset=0'
 		r = requests.get(url = surl, headers={'Authorization' : 'Bearer '+ (token)})
+		#print("information: "+r.json()['tracks']['items'][corr])
 		uri = (r.json()['tracks']['items'][0]['uri'])
+		#trackname = 
 		if(uri is None):
 			print("No such track")
 			response.message("No such song")
