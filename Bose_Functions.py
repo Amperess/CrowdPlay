@@ -46,16 +46,34 @@ def isDone():
 		current=r[index+1:]
 		#print(current)
 		current=int(re.search('[0-9]+', current).group())
-		#print("total time is: ",total)
-		#print("current time is:",current)
-		if(total-current<=2):
+		print("total time is: ",total)
+		print("current time is:",current)
+		if(total-current<=5):
 			return True
 		else:
 			return False
 
-def volumeUp():
+def volumeUp(step=5):
 	URL_Vol="http://192.168.1.144:8090/volume"
 	r = requests.get(url = URL_Vol, params=None).text
 	if r is not None:
 		print("read: ",r)
+		index=r.index("targetvolume>")+len("targetvolume>")
+		vol=int(re.search('[0-9]+', r[index:]).group())
+		print("current volume is: ",vol)
+		vol+=step
+		r = requests.post(url = URL_Vol, data='<volume>'+str(vol)+'</volume>')
+
+def volumeDown(step=5):
+	URL_Vol="http://192.168.1.144:8090/volume"
+	r = requests.get(url = URL_Vol, params=None).text
+	if r is not None:
+		print("read: ",r)
+		index=r.index("targetvolume>")+len("targetvolume>")
+		vol=int(re.search('[0-9]+', r[index:]).group())
+		print("current volume is: ",vol)
+		vol-=step
+		r = requests.post(url = URL_Vol, data='<volume>'+str(vol)+'</volume>')
+
 print(isDone())
+
