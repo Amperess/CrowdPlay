@@ -8,21 +8,31 @@ def isDone():
 	URL_NP="http://192.168.1.144:8090/now_playing"
 	r = requests.get(url = URL_NP, params=None).text
 	if r is not None:
-		print("read: ",r)
-		index=r.index("time total=")+len("time total=")
-		total=r[index+1:]
-		
-		total=int(re.search('[0-9]+', total).group())
-		index+=len(str(total))
-		current=r[index+1:]
-		#print(current)
-		current=int(re.search('[0-9]+', current).group())
-		print("total time is: ",total)
-		print("current time is:",current)
-		if(total-current<=5):
+		#print("read: ",r)
+		try:
+			index=r.index("time total=")+len("time total=")
+			if(index is None):
+				return True
+			total=r[index+1:]
+			
+			total=int(re.search('[0-9]+', total).group())
+			if(total is None):
+				return True
+			index+=len(str(total))
+			current=r[index+1:]
+			#print(current)
+			current=int(re.search('[0-9]+', current).group())
+			print("total time is: ",total)
+			print("current time is:",current)
+			if(total-current<=5 and total>5):
+				return True
+			else:
+				return False
+		except:
+			print("exception occured")
 			return True
-		else:
-			return False
+	print("Error")
+	return True
 
 def volumeUp(step=5):
 	URL_Vol="http://192.168.1.144:8090/volume"

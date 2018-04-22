@@ -1,8 +1,9 @@
 #import spotify
-import Bose_Functions
+import Bose_Functions as bf
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse, Message
 from twilio.rest import Client
+from threading import Timer
 import urllib
 import requests
 import xmltodict
@@ -18,7 +19,7 @@ client = Client('AC22b947e22fa835ea721401cf4016817b', '0cfdae9c98181b341cddfd21b
 sid = '35bc763fa7264c44b3db49feaf8d5a9e'
 ssecret = '69ca704b0a824ce68043d1f04173eba2'
 soath = 'BQAgfYft_OcY400oz3HZdY1-gCpyb853gOYTGtqMERr7VRrWQBX_bWYLZBuae6r6TRdUF7Vr_6d5NI0INBU8YQpvSqYi65qzOTQoTxGTAPsSVxfKiVgDI3k-wCkPF7Wz7_-X4T3ZQQQEvAx9bAoFA-43Q2q7D5W4kZLi2lY-q_PlJyeSxKjr1fY52U0gPMUjaqz_NHpRC9kwB_uuR8AgxR-cfdrsaiJYfu9uguUV6ESOSMGavd9iXujRjPTMr86lkVytYsTQHhif'
-	
+dec_count = 1	
 
 app = Flask(__name__)
  
@@ -39,12 +40,8 @@ def playSong(uri,name):
 		#l=pd.read_json(k['sourceItem
 		#print(k["sourceItem"]["sources"])
 		#print("data:",k["sourceItem"])
+		#print("type of data is: ",type(data["sources"]["sourceItem"]))
 		
-		'''for key, value in data["sources"]["sourceItem"].items():
-			print("key: ",key, "Value: ", value)
-			#print("type:",type(value))
-			if(type(value) is list):
-				spotify=value[-1]#json.dumps((value[-1]))'''
 		counter=0
 		for attribute in data["sources"]["sourceItem"]:
 			#print(list(attribute.items())[0][1])
@@ -55,40 +52,55 @@ def playSong(uri,name):
 				break
 			counter+=1
 		#print("counter is ",counter)
-		print("spotify is ",spotify)
 		#print("type is ",type(spotify))
 		print("Account Number is: ",acc_num)
 		r = requests.post(url = URL_Select, data='<ContentItem source="SPOTIFY" type="uri" location='+uri+' sourceAccount='+acc_num+' isPresetable="true"><itemName>'+name+'</itemName></ContentItem>')
 		print("r is: ",r.text)
+		timer = Timer(3, transitionTracks, None)
+		timer.start();
  
 #adds song to priority queue
 def enqueueSong(uri, entername):
 	global q1
 	global q2
+	global dec_count
+	dec_count+=1
+	inThere = False
 	if q1.empty():
-		q1.put(((-1, entername, uri)))
+		q1.put(((1.0000, entername, uri)))
 		print('Added song' + entername + uri)
-		playSong(uri, name)
+		timer = Timer(3, transitionTracks, None)
+		timer.start();
 		return()
 	while not q1.empty():
 		song = q1.get()
 		print("song q is ",song)
 		priority = song[0]
-		priority -= 1
 		ename = song[1]
-		uri = song[2]
+		uri_s = song[2]
 		if entername == ename:
-			q2.put((priority, ename, uri))
+			q2.put((priority-1, ename, uri_s))
+			inThere = True;
 		else:
-			q2.put((priority+1, ename, uri))
+			q2.put((priority, ename, uri_s))
+			
 	q1 = q2
-	q1.put(((-1, entername, uri)))
+	if not inThere:
+		q1.put(((1+(dec_count*0.0001), entername, uri)))
 	print("Not empty, added song" + entername)
 	q2 = Q.PriorityQueue()
-#play song
-def playNext(uri, name):
-	playSong(uri, name)
 	
+def transitionTracks():
+	global q1
+	global q2
+	if bf.isDone():
+		song = q1.get()
+		print("song struct is: ",song)
+		playSong(song[2], song[1])
+	else:
+		timer = Timer(3, transitionTracks, None)
+		timer.start();
+		
 # A route to respond to SMS messages and play music
 @app.route('/sms', methods=['POST'])
 def inbound_sms():
@@ -113,11 +125,17 @@ def inbound_sms():
 	surl = 'https://api.spotify.com/v1/search?q='+ song_title + '&type=track&limit=1&offset=0'
 	r = requests.get(url = surl, headers={'Authorization' : 'Bearer '+ (token)})
 	uri = (r.json()['tracks']['items'][0]['uri'])
+	if(uri is None):
+		print("No such track")
+		response.message("No such song")
+		return str(response)
 	track = (r.json()['tracks']['items'][0]['name'])
 	name = track
 	message = client.messages.create(from_number,body="Your song has been queued!",from_=to_number)
 	print("Read song: " + name)
+	print("URI IS: ", uri)
 	enqueueSong(uri, name)
+
 	return str(response)
 	
 if __name__ == '__main__':		
