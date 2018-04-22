@@ -9,6 +9,7 @@ import requests
 import xmltodict
 import json
 import pandas as pd
+import re
 try:
 	import Queue as Q  # ver. < 3.0
 except ImportError:
@@ -22,6 +23,36 @@ soath = 'BQAgfYft_OcY400oz3HZdY1-gCpyb853gOYTGtqMERr7VRrWQBX_bWYLZBuae6r6TRdUF7V
 dec_count = 1	
 
 app = Flask(__name__)
+
+def skip():
+	global q1
+	song = q1.get()
+	print("song struct is: ",song)
+	playSong(song[2], song[1])
+
+
+
+#volume Control
+def volume(song_title):
+	#step=0
+	if (song_title.lower().startswith('vol')):
+		try:
+			step = int((song_title.split("%20"))[2])
+			print("regex step is: ",step)
+		except:
+			print('no volume specified', song_title)
+			step=5			
+
+		if(step<0):
+			step=0
+		elif(step>100):
+			step=100
+		print("step: ",step)
+		if( 'up' in song_title.lower()):
+			bf.volumeUp(step)
+		else:
+			bf.volumeDown(step)
+
  
 def playSong(uri,name):
 	print("Playing song")
@@ -115,26 +146,34 @@ def inbound_sms():
 	from_number = request.form['From']
 	to_number = request.form['To']
 	
-	#get auth token
-	url='https://accounts.spotify.com/api/token'
-	postr=requests.post(url, data = {'grant_type' : 'client_credentials'}, auth = (sid, ssecret))
-	token = postr.json()
-	token=(token['access_token'])
-	
-	#Get song information
-	surl = 'https://api.spotify.com/v1/search?q='+ song_title + '&type=track&limit=1&offset=0'
-	r = requests.get(url = surl, headers={'Authorization' : 'Bearer '+ (token)})
-	uri = (r.json()['tracks']['items'][0]['uri'])
-	if(uri is None):
-		print("No such track")
-		response.message("No such song")
-		return str(response)
-	track = (r.json()['tracks']['items'][0]['name'])
-	name = track
-	message = client.messages.create(from_number,body="Your song has been queued!",from_=to_number)
-	print("Read song: " + name)
-	print("URI IS: ", uri)
-	enqueueSong(uri, name)
+	if (song_title.lower().startswith('volume')):
+		volume(song_title)
+	elif(song_title.lower().strip()=='skip'):
+		
+		
+		
+		
+	else:
+		#get auth token
+		url='https://accounts.spotify.com/api/token'
+		postr=requests.post(url, data = {'grant_type' : 'client_credentials'}, auth = (sid, ssecret))
+		token = postr.json()
+		token=(token['access_token'])
+		
+		#Get song information
+		surl = 'https://api.spotify.com/v1/search?q='+ song_title + '&type=track&limit=1&offset=0'
+		r = requests.get(url = surl, headers={'Authorization' : 'Bearer '+ (token)})
+		uri = (r.json()['tracks']['items'][0]['uri'])
+		if(uri is None):
+			print("No such track")
+			response.message("No such song")
+			return str(response)
+		track = (r.json()['tracks']['items'][0]['name'])
+		name = track
+		message = client.messages.create(from_number,body="Your song has been queued!",from_=to_number)
+		print("Read song: " + name)
+		print("URI IS: ", uri)
+		enqueueSong(uri, name)
 
 	return str(response)
 	
