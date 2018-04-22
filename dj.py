@@ -16,6 +16,7 @@ except ImportError:
 	import queue as Q
 q1 = Q.PriorityQueue()
 q2 = Q.PriorityQueue()
+currentSong=" "
 client = Client('AC22b947e22fa835ea721401cf4016817b', '0cfdae9c98181b341cddfd21b6541e3e')
 sid = '35bc763fa7264c44b3db49feaf8d5a9e'
 ssecret = '69ca704b0a824ce68043d1f04173eba2'
@@ -131,6 +132,7 @@ def nextFive():
  
 def playSong(uri,name):
 	print("Playing song")
+	global currentSong
 	URL_Select="http://192.168.1.144:8090/select"
 	URL_Sources="http://192.168.1.144:8090/sources"
 	#PARAMS = {'address':location}
@@ -163,19 +165,22 @@ def playSong(uri,name):
 		r = requests.post(url = URL_Select, data='<ContentItem source="SPOTIFY" type="uri" location='+uri+' sourceAccount='+acc_num+' isPresetable="true"><itemName>'+name+'</itemName></ContentItem>')
 		print("r is: ",r.text)
 		timer = Timer(3, transitionTracks, None)
-		timer.start();
+		timer.start()
+		currentSong = name
  
 #adds song to priority queue
 def enqueueSong(uri, entername):
 	global q1
 	global q2
 	global dec_count
+	global currentSong
 	dec_count+=1
 	inThere = False
 	if q1.empty():
 		q1.put(((1.0000, entername, uri)))
 		print('Added song' + entername + uri)
 		timer = Timer(3, transitionTracks, None)
+		currentSong = entername
 		timer.start();
 		return()
 	while not q1.empty():
@@ -210,6 +215,8 @@ def transitionTracks():
 # A route to respond to SMS messages and play music
 @app.route('/sms', methods=['POST'])
 def inbound_sms():
+	global currentSong
+	 
 	response = MessagingResponse()
 	print("Q is:")
 	print(q1)
@@ -220,7 +227,7 @@ def inbound_sms():
 	from_number = request.form['From']
 	to_number = request.form['To']
 	
-	print("song title is:", song_title.lower().strip())
+	#print("song title is:", song_title.lower().strip())
 
 	if (song_title.lower().startswith('volume')):
 		#volume(song_title)
@@ -237,6 +244,12 @@ def inbound_sms():
 		response.message('It\'s over 9000!')
 	elif(song_title.lower().strip()=='up%20next'):
 		response.message(nextFive())
+	elif(song_title.lower().strip()=='current%20song'):
+		print('Current song is: ' + currentSong)
+		if not currentSong == " ":
+			response.message('The current song is ' +currentSong)
+		else:
+			response.message('There is no song playing right now')
 	else:
 		#get auth token
 		url='https://accounts.spotify.com/api/token'

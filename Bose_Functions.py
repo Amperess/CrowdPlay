@@ -29,9 +29,9 @@ def isDone():
 			else:
 				return False
 		except:
-			print("exception occured")
+			print("exception occured in timing, about to say song is done")
 			return True
-	print("Error")
+	print("Error in timing, returning true")
 	return True
 
 def volumeUp(step=5):
