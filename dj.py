@@ -1,5 +1,4 @@
 import spotify
- 
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse, Message
 from twilio.rest import Client
@@ -57,10 +56,10 @@ sid = '35bc763fa7264c44b3db49feaf8d5a9e'
 ssecret = '69ca704b0a824ce68043d1f04173eba2'
 app = Flask(__name__)
 soath = 'BQAgfYft_OcY400oz3HZdY1-gCpyb853gOYTGtqMERr7VRrWQBX_bWYLZBuae6r6TRdUF7Vr_6d5NI0INBU8YQpvSqYi65qzOTQoTxGTAPsSVxfKiVgDI3k-wCkPF7Wz7_-X4T3ZQQQEvAx9bAoFA-43Q2q7D5W4kZLi2lY-q_PlJyeSxKjr1fY52U0gPMUjaqz_NHpRC9kwB_uuR8AgxR-cfdrsaiJYfu9uguUV6ESOSMGavd9iXujRjPTMr86lkVytYsTQHhif'
-# A route to respond to SMS messages and kick off a phone call.
+# A route to respond to SMS messages and play music
 @app.route('/sms', methods=['POST'])
 def inbound_sms():
-	response = MessagingResponse()
+	#response = MessagingResponse()
 	
 	# Grab the song title from the body of the text message.
 	song_title = urllib.parse.quote(request.form['Body'])
@@ -69,31 +68,21 @@ def inbound_sms():
 	from_number = request.form['From']
 	to_number = request.form['To']
 	
+	#get auth token
 	url='https://accounts.spotify.com/api/token'
 	postr=requests.post(url, data = {'grant_type' : 'client_credentials'}, auth = (sid, ssecret))
-	
-	surl = 'https://api.spotify.com/v1/search?q='+ song_title + '&type=track&limit=1&offset=0'
-	#pd.read_json(postr)
-	#token = str(list(postr)[0])
 	token = postr.json()
-	#token = '[' + str(token) + ']'
 	token=(token['access_token'])
-	#print("token: "+token)
-	#df = pd.read_json(token)
-	#print('access token is:', df['acces_token'])
+	
+	#Get song information and play it
+	surl = 'https://api.spotify.com/v1/search?q='+ song_title + '&type=track&limit=1&offset=0'
 	r = requests.get(url = surl, headers={'Authorization' : 'Bearer '+ (token)})
-	#print(s)
 	uri = (r.json()['tracks']['items'][0]['uri'])
 	track = (r.json()['tracks']['items'][0]['name'])
-	print(uri)
-	print(track)
-	name=track
-	'''for v in vals:
-		print("value: ",v)'''
-	message = client.messages.create(from_number,body="Let's grab lunch at Brower tomorrow!",from_=to_number)
+	name = track
+	message = client.messages.create(from_number,body="Your song has been queued!",from_=to_number)
 	playSong(uri, name)
-	#response.message(r.json())
-	return str(response)
+	#return str(response)
 	
 if __name__ == '__main__':
 	app.run(host='0.0.0.0', debug=True)
