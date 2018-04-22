@@ -57,7 +57,7 @@ def volumeDown(step=5):
 		r = requests.post(url = URL_Vol, data='<volume>'+str(vol)+'</volume>')
 def volumeMax():
 	URL_Vol="http://192.168.1.144:8090/volume"
-	r = requests.post(url = URL_Vol, data='<volume>'+str(65)+'</volume>')
+	r = requests.post(url = URL_Vol, data='<volume>'+str(90)+'</volume>')
 def mute():
 	URL_Vol="http://192.168.1.144:8090/volume"
 	r = requests.post(url = URL_Vol, data='<volume>'+str(0)+'</volume>')
