@@ -17,12 +17,11 @@ except ImportError:
 q1 = Q.PriorityQueue()
 q2 = Q.PriorityQueue()
 currentSong=" "
-client = Client('AC22b947e22fa835ea721401cf4016817b', '0cfdae9c98181b341cddfd21b6541e3e')
-sid = '35bc763fa7264c44b3db49feaf8d5a9e'
-ssecret = '69ca704b0a824ce68043d1f04173eba2'
-soath = 'BQAgfYft_OcY400oz3HZdY1-gCpyb853gOYTGtqMERr7VRrWQBX_bWYLZBuae6r6TRdUF7Vr_6d5NI0INBU8YQpvSqYi65qzOTQoTxGTAPsSVxfKiVgDI3k-wCkPF7Wz7_-X4T3ZQQQEvAx9bAoFA-43Q2q7D5W4kZLi2lY-q_PlJyeSxKjr1fY52U0gPMUjaqz_NHpRC9kwB_uuR8AgxR-cfdrsaiJYfu9uguUV6ESOSMGavd9iXujRjPTMr86lkVytYsTQHhif'
+client = "Don't you wish"
+sid = "Your girlfriend"
+ssecret = "was hot"
+soath = "like me"
 dec_count = 1	
-
 app = Flask(__name__)
 
 def skip():
